@@ -7,17 +7,25 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url'; // Import for converting URL to path
 import { dirname } from 'path'; // Import for resolving directory names
 import fs from 'fs';
-
+import cookieParser from 'cookie-parser';
+import bodyParser from 'body-parser';
+// Load environment variables
 dotenv.config();
 
 // Middleware setup
 const app = express();
 app.use(express.json());  // For parsing JSON bodies
+// Use middleware
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-const allowedOrigins = process.env.NODE_ENV === 'production' 
-    ? ['https://your-production-domain.com'] 
+// Define allowed origins based on environment
+const allowedOrigins = process.env.NODE_ENV === 'production' && process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',') 
     : ['http://localhost:3000'];
 
+// CORS configuration
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin || allowedOrigins.includes(origin)) {
@@ -28,6 +36,9 @@ app.use(cors({
     },
     credentials: true,
 }));
+
+console.log('CORS Allowed Origins:', allowedOrigins);
+
 
 // Get the __dirname equivalent in ES module
 const __filename = fileURLToPath(import.meta.url);
@@ -62,8 +73,8 @@ const uploadAnimalImage = multer({
 // MongoDB Connection (Make sure to use DB URI)
 mongoose
   .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+    // useNewUrlParser: true,
+    // useUnifiedTopology: true,
   })
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
