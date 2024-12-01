@@ -13,8 +13,21 @@ dotenv.config();
 // Middleware setup
 const app = express();
 app.use(express.json());  // For parsing JSON bodies
-// const cors = require('cors');
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? ['https://your-production-domain.com'] 
+    : ['http://localhost:3000'];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true); // Allow the request
+        } else {
+            callback(new Error('Not allowed by CORS')); // Reject the request
+        }
+    },
+    credentials: true,
+}));
 
 // Get the __dirname equivalent in ES module
 const __filename = fileURLToPath(import.meta.url);
@@ -46,7 +59,7 @@ const uploadAnimalImage = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
 }).single('image');
 
-// MongoDB Connection (Make sure to use your own DB URI)
+// MongoDB Connection (Make sure to use DB URI)
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -340,8 +353,6 @@ const getAnimalsByCategoryName = async (req, res) => {
 
 
 // Routes
-
-// Category Routes
 // Category Routes
 
 // Get all categories
